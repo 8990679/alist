@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>FBA 箱唛处理工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md text-center">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">FBA 箱唛处理工具</h1>
+
+    <!-- 使用说明 -->
+    <div class="text-sm text-gray-600 mb-6 text-left">
+      <p class="mb-2">📄 节省时间&减少成本小工具。</p>
+      <ul class="list-disc list-inside space-y-1">
+        <li>后台选 (热敏打印 - 4 x 6 英寸)。</li>
+        <li>点击“下载处理后的箱唛”#注意检查处理后的文件。</li>
+        <li>有 文字 或 码 被裁掉的说明处理失败了。</li>
+      </ul>
+    </div>
+
+    <input
+      type="file"
+      id="upload"
+      accept="application/pdf"
+      class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4
+             file:rounded-full file:border-0 file:text-sm file:font-semibold
+             file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"
+    />
+
+    <button
+      onclick="cropPdf()"
+      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition duration-200"
+    >
+      点击开始处理
+    </button>
+
+    <a
+      id="download"
+      href="#"
+      download="箱唛.pdf"
+      class="mt-6 inline-block text-blue-600 hover:underline font-medium hidden"
+    >
+      下载处理后的箱唛
+    </a>
+
+    <!-- 添加显示处理次数的元素 -->
+    <p id="processCount" class="text-sm text-gray-600 mt-4">已处理次数：0</p>
+  </div>
+
+  <script>
+    // 在 script 标签中添加一个变量来记录次数
+    let processCounter = 0;
+
+    async function cropPdf() {
+      const file = document.getElementById('upload').files[0];
+      if (!file || file.type !== 'application/pdf') {
+        alert('请上传箱唛 PDF 文件');
+        return;
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+      const pages = pdfDoc.getPages();
+
+      pages.forEach(page => {
+        const { width, height } = page.getSize();
+        page.setCropBox(1, height - width + 1, width - 1, width - 1);
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      const downloadLink = document.getElementById('download');
+      downloadLink.href = url;
+      downloadLink.classList.remove('hidden');
+
+      // 更新处理次数
+      processCounter++;
+      document.getElementById('processCount').textContent = `已处理次数：${processCounter}`;
+    }
+  </script>
+
+</body>
+</html>
